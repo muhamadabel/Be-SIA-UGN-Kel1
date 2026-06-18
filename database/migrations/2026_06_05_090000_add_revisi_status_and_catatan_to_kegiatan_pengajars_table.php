@@ -6,21 +6,21 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 /**
- * [KELOMPOK 1] Lengkapi alur validasi Kegiatan Mengajar:
- * - Tambah status 'Revisi' ke enum status_validasi (untuk "Perlu Revisi").
- * - Tambah kolom catatan_validasi (catatan manager saat minta revisi / menolak).
- *
- * Additive & hanya menyentuh tabel Kel-1. Raw ALTER agar tak butuh doctrine/dbal.
+ * [KELOMPOK 1] Tambah status 'Revisi' + kolom catatan_validasi ke kegiatan_pengajars.
+ * Driver-aware: MySQL = native ENUM; PostgreSQL (Supabase) = CHECK constraint.
  */
 return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement(
-            "ALTER TABLE kegiatan_pengajars
-             MODIFY status_validasi ENUM('Draft','Diajukan','Disetujui','Ditolak','Revisi')
-             NOT NULL DEFAULT 'Draft'"
-        );
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE kegiatan_pengajars DROP CONSTRAINT IF EXISTS kegiatan_pengajars_status_validasi_check');
+            DB::statement('ALTER TABLE kegiatan_pengajars ALTER COLUMN status_validasi TYPE VARCHAR(30)');
+            DB::statement("ALTER TABLE kegiatan_pengajars ALTER COLUMN status_validasi SET DEFAULT 'Draft'");
+            DB::statement("ALTER TABLE kegiatan_pengajars ADD CONSTRAINT kegiatan_pengajars_status_validasi_check CHECK (status_validasi IN ('Draft','Diajukan','Disetujui','Ditolak','Revisi'))");
+        } else {
+            DB::statement("ALTER TABLE kegiatan_pengajars MODIFY status_validasi ENUM('Draft','Diajukan','Disetujui','Ditolak','Revisi') NOT NULL DEFAULT 'Draft'");
+        }
 
         if (!Schema::hasColumn('kegiatan_pengajars', 'catatan_validasi')) {
             Schema::table('kegiatan_pengajars', function (Blueprint $table) {
@@ -37,10 +37,11 @@ return new class extends Migration
             });
         }
 
-        DB::statement(
-            "ALTER TABLE kegiatan_pengajars
-             MODIFY status_validasi ENUM('Draft','Diajukan','Disetujui','Ditolak')
-             NOT NULL DEFAULT 'Draft'"
-        );
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE kegiatan_pengajars DROP CONSTRAINT IF EXISTS kegiatan_pengajars_status_validasi_check');
+            DB::statement("ALTER TABLE kegiatan_pengajars ADD CONSTRAINT kegiatan_pengajars_status_validasi_check CHECK (status_validasi IN ('Draft','Diajukan','Disetujui','Ditolak'))");
+        } else {
+            DB::statement("ALTER TABLE kegiatan_pengajars MODIFY status_validasi ENUM('Draft','Diajukan','Disetujui','Ditolak') NOT NULL DEFAULT 'Draft'");
+        }
     }
 };
