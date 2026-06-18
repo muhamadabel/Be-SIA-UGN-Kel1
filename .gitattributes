@@ -9,3 +9,8 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+# Shell scripts harus LF (untuk container Linux)
+*.sh text eol=lf
+captain-definition text eol=lf
+Dockerfile text eol=lf
