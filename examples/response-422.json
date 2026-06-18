@@ -1,0 +1,13 @@
+{
+    "status": "error",
+    "message": "Validasi gagal.",
+    "errors": {
+        "email": [
+            "Email wajib diisi.",
+            "Email harus berupa alamat email yang valid."
+        ],
+        "password": [
+            "Password wajib diisi."
+        ]
+    }
+}

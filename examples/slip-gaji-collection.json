@@ -1,0 +1,171 @@
+{
+    "info": {
+        "_postman_id": "9f613d53-7fdb-4ee4-8f93-2a9a64b3f4c1",
+        "name": "C.4 Slip Gaji, Komponen Gaji, dan Integrasi Presensi",
+        "description": "Koleksi API untuk Modul C.4 Gaji Dosen (Slip Gaji, Komponen Gaji, dan Integrasi Presensi).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    console.log('Token tersimpan:', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"dosen@gmail.com\",\n    \"password\": \"dosen123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login sebagai dosen. Script test otomatis menyimpan token ke collection variable."
+          }
+        }
+      ],
+      "description": "Endpoint otentikasi untuk mendapatkan Bearer token."
+    },
+    {
+      "name": "Manajemen Slip Gaji",
+      "item": [
+        {
+          "name": "POST Generate Slip Gaji",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bulan\": 3,\n  \"tahun\": 2026\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/lecturer/payroll/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lecturer",
+                "payroll",
+                "generate"
+              ]
+            },
+            "description": "Memicu kalkulasi dan penyimpanan slip gaji beserta komponennya untuk bulan & tahun tertentu.\n\n**Prasyarat penting:** Rekap presensi untuk bulan terkait harus sudah di-generate terlebih dahulu via Modul C.1."
+          }
+        },
+        {
+          "name": "GET Daftar Slip Gaji Bulanan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/lecturer/payroll?tahun=2026",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lecturer",
+                "payroll"
+              ],
+              "query": [
+                {
+                  "key": "tahun",
+                  "value": "2026",
+                  "description": "Tahun empat digit. Opsional."
+                }
+              ]
+            },
+            "description": "Mengambil daftar seluruh slip gaji milik dosen yang sedang login."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

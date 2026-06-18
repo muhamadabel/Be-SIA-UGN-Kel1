@@ -1,0 +1,259 @@
+{
+  "info": {
+    "_postman_id": "c367fdef-fa53-4e38-859c-bae2e911c546",
+    "name": "C.2 Angka Kredit (Beban Kerja Dosen) - Lengkap",
+    "description": "Koleksi API Lengkap untuk Modul C.2: Input BKD, Cek Kelayakan (Eligibility), dan Pengajuan Kenaikan Jabatan.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50398167",
+    "_collection_link": "https://go.postman.co/collection/50398167-c367fdef-fa53-4e38-859c-bae2e911c546?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    console.log('Token tersimpan:', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"dosen@gmail.com\",\n    \"password\": \"dosen123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Manajemen Beban Kerja Dosen",
+      "item": [
+        {
+          "name": "1. POST Input Kegiatan BKD (Suntik 47 SKS)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id_user_si\": 18,\n    \"kategori\": \"Penelitian\",\n    \"nama_kegiatan\": \"Publikasi Jurnal Internasional Terindeks Scopus (Q1)\",\n    \"sks_beban\": 47.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/lecturer/bkd/kegiatan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lecturer",
+                "bkd",
+                "kegiatan"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. GET Cek Kelayakan (Eligibility)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/lecturer/bkd/check-eligibility?id_user_si=18",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lecturer",
+                "bkd",
+                "check-eligibility"
+              ],
+              "query": [
+                {
+                  "key": "id_user_si",
+                  "value": "18",
+                  "description": "ID Dosen"
+                }
+              ]
+            },
+            "description": "Mengecek apakah total KUM sudah >= 50. Jika ya, otomatis membuat draft pengajuan dengan status 'eligible'."
+          },
+          "response": []
+        },
+        {
+          "name": "3. POST Submit Pengajuan Jabatan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id_user_si\": 18\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/lecturer/bkd/submit-pengajuan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lecturer",
+                "bkd",
+                "submit-pengajuan"
+              ]
+            },
+            "description": "Mengubah status pengajuan dari 'eligible' menjadi 'diajukan' ke Manager."
+          },
+          "response": []
+        },
+        {
+          "name": "4. GET Cetak Dokumen PAK",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "13|imkOeINAxad4uKBpwjLomJ191hpyPnIn6AyKltdP951138ee",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/lecturer/bkd/pengajuan/1/cetak-pak",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "lecturer",
+                "bkd",
+                "pengajuan",
+                "1",
+                "cetak-pak"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

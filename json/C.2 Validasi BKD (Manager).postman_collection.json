@@ -1,0 +1,171 @@
+{
+  "info": {
+    "_postman_id": "b6074045-7cda-466c-94ce-0911c9e1482d",
+    "name": "C.2 Validasi BKD (Manager)",
+    "description": "Koleksi API untuk Manager: Melihat daftar pengajuan kenaikan jabatan dosen dan melakukan validasi (Setuju/Tolak).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50398167",
+    "_collection_link": "https://go.postman.co/collection/50398167-b6074045-7cda-466c-94ce-0911c9e1482d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth (Manager)",
+      "item": [
+        {
+          "name": "Login Manager",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    console.log('Token Manager tersimpan:', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"manager@gmail.com\",\n    \"password\": \"password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login menggunakan akun Manager. (Ganti password di body jika password seedermu berbeda)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Validasi Pengajuan Jabatan",
+      "item": [
+        {
+          "name": "1. GET Daftar Pengajuan Dosen",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/manager/bkd/pengajuan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manager",
+                "bkd",
+                "pengajuan"
+              ]
+            },
+            "description": "Menampilkan semua dosen yang status pengajuannya sedang 'diajukan'."
+          },
+          "response": []
+        },
+        {
+          "name": "2. PUT Validasi Manager (Setuju)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"divalidasi_manager\",\n    \"catatan_manager\": \"KUM sudah memenuhi syarat Dikti. Dokumen pendukung valid. Disetujui untuk cetak PAK.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/manager/bkd/pengajuan/1/validasi",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manager",
+                "bkd",
+                "pengajuan",
+                "1",
+                "validasi"
+              ]
+            },
+            "description": "Mengubah status pengajuan menjadi divalidasi_manager atau ditolak beserta catatannya. Ganti angka '1' di URL dengan id_pengajuan yang didapat dari request GET sebelumnya."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

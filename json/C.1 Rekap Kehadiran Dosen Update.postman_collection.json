@@ -1,0 +1,1601 @@
+{
+    "info": {
+        "_postman_id": "acbac01b-52f6-4acf-9614-c6f3e96dd678",
+        "name": "C.1 Rekap Kehadiran Dosen Update",
+        "description": "Koleksi API untuk fitur Rekap Kehadiran Dosen (C.1 - Modul Presensi Dosen) beserta integrasi ke Modul Gaji (C.4).\n\nSemua endpoint memerlukan Bearer Token (Sanctum) milik user dengan role **dosen**.\n\nVariable yang dibutuhkan:\n- `base_url`  → contoh: http://localhost/api\n- `token`     → Bearer token hasil login\n\nFlow lengkap:\n1. Login via POST /auth/login → simpan token\n2. POST /lecturer/attendance/recap/generate → hitung rekap bulan ini\n3. GET  /lecturer/attendance/recap          → lihat semua rekap\n4. GET  /lecturer/attendance/recap?bulan=3&tahun=2026 → filter per bulan\n5. GET  /lecturer/attendance/payroll-deduction?bulan=3&tahun=2026 → ambil nilai potongan untuk modul gaji",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "50398167",
+        "_collection_link": "https://go.postman.co/collection/50398167-acbac01b-52f6-4acf-9614-c6f3e96dd678?source=collection_link"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const json = pm.response.json();",
+                                    "if (json.token) {",
+                                    "    pm.collectionVariables.set('token', json.token);",
+                                    "    console.log('Token tersimpan:', json.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript",
+                                "packages": {},
+                                "requests": {}
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"dosen@gmail.com\",\n    \"password\": \"dosen123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:8000/api/auth/login",
+                            "protocol": "http",
+                            "host": ["127", "0", "0", "1"],
+                            "port": "8000",
+                            "path": ["api", "auth", "login"]
+                        },
+                        "description": "Login sebagai dosen. Script test otomatis menyimpan token ke collection variable."
+                    },
+                    "response": [
+                        {
+                            "name": "200 - Login Berhasil",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"email\": \"dosen@gmail.com\",\n    \"password\": \"dosen123\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/auth/login",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": ["api", "auth", "login"]
+                                },
+                                "description": "Login sebagai dosen. Script test otomatis menyimpan token ke collection variable."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"success\",\n    \"message\": \"Login berhasil.\",\n    \"token\": \"1|abc123xyz...\",\n    \"data\": {\n        \"id_user_si\": 5,\n        \"name\": \"Dr. Ahmad Fauzi, M.T.\",\n        \"email\": \"dosen@ugn.ac.id\",\n        \"role\": \"dosen\"\n    }\n}"
+                        },
+                        {
+                            "name": "401 - Kredensial Salah",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"email\": \"dosen@gmail.com\",\n    \"password\": \"dosen123\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/auth/login",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": ["api", "auth", "login"]
+                                },
+                                "description": "Login sebagai dosen. Script test otomatis menyimpan token ke collection variable."
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"error\",\n    \"message\": \"Email atau password salah.\"\n}"
+                        }
+                    ]
+                }
+            ],
+            "description": "Endpoint otentikasi untuk mendapatkan Bearer token."
+        },
+        {
+            "name": "Rekap Presensi Dosen",
+            "item": [
+                {
+                    "name": "GET Semua Rekap (tanpa filter)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap",
+                            "protocol": "http",
+                            "host": ["127", "0", "0", "1"],
+                            "port": "8000",
+                            "path": ["api", "lecturer", "attendance", "recap"]
+                        },
+                        "description": "Mengembalikan seluruh rekap presensi milik dosen yang sedang login, diurutkan dari yang terbaru."
+                    },
+                    "response": [
+                        {
+                            "name": "200 - Rekap Ditemukan",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap"
+                                    ]
+                                },
+                                "description": "Mengembalikan seluruh rekap presensi milik dosen yang sedang login, diurutkan dari yang terbaru."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"success\",\n    \"message\": \"Rekap presensi berhasil diambil.\",\n    \"data\": [\n        {\n            \"id\": 7,\n            \"id_user_si\": 5,\n            \"id_academic_period\": 2,\n            \"bulan\": 3,\n            \"tahun\": 2026,\n            \"total_hadir\": 18,\n            \"total_izin\": 2,\n            \"total_sakit\": 1,\n            \"total_alpha\": 0,\n            \"total_hari_kerja\": 21,\n            \"created_at\": \"2026-03-07T08:00:00.000000Z\",\n            \"updated_at\": \"2026-03-07T08:00:00.000000Z\",\n            \"academic_period\": {\n                \"id_academic_period\": 2,\n                \"name\": \"Semester Genap 2025/2026\",\n                \"start_date\": \"2026-02-01\",\n                \"end_date\": \"2026-07-31\",\n                \"is_active\": true\n            }\n        },\n        {\n            \"id\": 4,\n            \"id_user_si\": 5,\n            \"id_academic_period\": 1,\n            \"bulan\": 12,\n            \"tahun\": 2025,\n            \"total_hadir\": 20,\n            \"total_izin\": 1,\n            \"total_sakit\": 0,\n            \"total_alpha\": 0,\n            \"total_hari_kerja\": 21,\n            \"created_at\": \"2025-12-31T10:00:00.000000Z\",\n            \"updated_at\": \"2025-12-31T10:00:00.000000Z\",\n            \"academic_period\": {\n                \"id_academic_period\": 1,\n                \"name\": \"Semester Ganjil 2025/2026\",\n                \"start_date\": \"2025-08-01\",\n                \"end_date\": \"2026-01-31\",\n                \"is_active\": false\n            }\n        }\n    ]\n}"
+                        },
+                        {
+                            "name": "200 - Belum Ada Rekap",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap"
+                                    ]
+                                },
+                                "description": "Mengembalikan seluruh rekap presensi milik dosen yang sedang login, diurutkan dari yang terbaru."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"success\",\n    \"message\": \"Rekap presensi berhasil diambil.\",\n    \"data\": []\n}"
+                        },
+                        {
+                            "name": "401 - Tidak Terautentikasi",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap"
+                                    ]
+                                },
+                                "description": "Mengembalikan seluruh rekap presensi milik dosen yang sedang login, diurutkan dari yang terbaru."
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Unauthenticated.\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "GET Rekap - Filter Bulan & Tahun",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap?bulan=3&tahun=2026",
+                            "protocol": "http",
+                            "host": ["127", "0", "0", "1"],
+                            "port": "8000",
+                            "path": ["api", "lecturer", "attendance", "recap"],
+                            "query": [
+                                {
+                                    "key": "bulan",
+                                    "value": "3",
+                                    "description": "Nomor bulan (1–12). Opsional."
+                                },
+                                {
+                                    "key": "tahun",
+                                    "value": "2026",
+                                    "description": "Tahun empat digit. Opsional."
+                                }
+                            ]
+                        },
+                        "description": "Mengembalikan rekap presensi dosen login yang difilter berdasarkan bulan dan/atau tahun tertentu. Kedua query param bersifat opsional dan dapat digunakan secara terpisah."
+                    },
+                    "response": [
+                        {
+                            "name": "200 - Rekap Bulan Maret 2026",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap?bulan=3&tahun=2026",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "bulan",
+                                            "value": "3",
+                                            "description": "Nomor bulan (1–12). Opsional."
+                                        },
+                                        {
+                                            "key": "tahun",
+                                            "value": "2026",
+                                            "description": "Tahun empat digit. Opsional."
+                                        }
+                                    ]
+                                },
+                                "description": "Mengembalikan rekap presensi dosen login yang difilter berdasarkan bulan dan/atau tahun tertentu. Kedua query param bersifat opsional dan dapat digunakan secara terpisah."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"success\",\n    \"message\": \"Rekap presensi berhasil diambil.\",\n    \"data\": [\n        {\n            \"id\": 7,\n            \"id_user_si\": 5,\n            \"id_academic_period\": 2,\n            \"bulan\": 3,\n            \"tahun\": 2026,\n            \"total_hadir\": 18,\n            \"total_izin\": 2,\n            \"total_sakit\": 1,\n            \"total_alpha\": 0,\n            \"total_hari_kerja\": 21,\n            \"created_at\": \"2026-03-07T08:00:00.000000Z\",\n            \"updated_at\": \"2026-03-07T08:00:00.000000Z\",\n            \"academic_period\": {\n                \"id_academic_period\": 2,\n                \"name\": \"Semester Genap 2025/2026\",\n                \"start_date\": \"2026-02-01\",\n                \"end_date\": \"2026-07-31\",\n                \"is_active\": true\n            }\n        }\n    ]\n}"
+                        },
+                        {
+                            "name": "422 - Validasi Gagal (bulan tidak valid)",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap?bulan=3&tahun=2026",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "bulan",
+                                            "value": "3",
+                                            "description": "Nomor bulan (1–12). Opsional."
+                                        },
+                                        {
+                                            "key": "tahun",
+                                            "value": "2026",
+                                            "description": "Tahun empat digit. Opsional."
+                                        }
+                                    ]
+                                },
+                                "description": "Mengembalikan rekap presensi dosen login yang difilter berdasarkan bulan dan/atau tahun tertentu. Kedua query param bersifat opsional dan dapat digunakan secara terpisah."
+                            },
+                            "status": "Unprocessable Content",
+                            "code": 422,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The bulan field must be between 1 and 12.\",\n    \"errors\": {\n        \"bulan\": [\n            \"The bulan field must be between 1 and 12.\"\n        ]\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "POST Generate Rekap Bulan Ini (default)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap/generate",
+                            "protocol": "http",
+                            "host": ["127", "0", "0", "1"],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "lecturer",
+                                "attendance",
+                                "recap",
+                                "generate"
+                            ]
+                        },
+                        "description": "Memicu kalkulasi rekap presensi untuk bulan berjalan (bulan & tahun otomatis diisi dari tanggal server saat ini). Body boleh kosong `{}`."
+                    },
+                    "response": [
+                        {
+                            "name": "200 - Generate Berhasil (bulan berjalan)",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap/generate",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap",
+                                        "generate"
+                                    ]
+                                },
+                                "description": "Memicu kalkulasi rekap presensi untuk bulan berjalan (bulan & tahun otomatis diisi dari tanggal server saat ini). Body boleh kosong `{}`."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"success\",\n    \"message\": \"Rekap presensi bulan 3/2026 berhasil digenerate.\",\n    \"data\": {\n        \"id\": 7,\n        \"id_user_si\": 5,\n        \"id_academic_period\": 2,\n        \"bulan\": 3,\n        \"tahun\": 2026,\n        \"total_hadir\": 18,\n        \"total_izin\": 2,\n        \"total_sakit\": 1,\n        \"total_alpha\": 0,\n        \"total_hari_kerja\": 21,\n        \"created_at\": \"2026-03-07T08:00:00.000000Z\",\n        \"updated_at\": \"2026-03-07T08:14:32.000000Z\",\n        \"academic_period\": {\n            \"id_academic_period\": 2,\n            \"name\": \"Semester Genap 2025/2026\",\n            \"start_date\": \"2026-02-01\",\n            \"end_date\": \"2026-07-31\",\n            \"is_active\": true\n        }\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "POST Generate Rekap Bulan Tertentu",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"bulan\": 2,\n    \"tahun\": 2026\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap/generate",
+                            "protocol": "http",
+                            "host": ["127", "0", "0", "1"],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "lecturer",
+                                "attendance",
+                                "recap",
+                                "generate"
+                            ]
+                        },
+                        "description": "Generate rekap untuk bulan & tahun tertentu. Kedua field bersifat opsional — jika tidak diisi, default ke bulan berjalan.\n\n| Field | Tipe    | Wajib | Keterangan         |\n|-------|---------|-------|--------------------|\n| bulan | integer | Tidak | 1–12               |\n| tahun | integer | Tidak | Min 2000           |"
+                    },
+                    "response": [
+                        {
+                            "name": "200 - Generate Berhasil (bulan spesifik)",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"bulan\": 2,\n    \"tahun\": 2026\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap/generate",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap",
+                                        "generate"
+                                    ]
+                                },
+                                "description": "Generate rekap untuk bulan & tahun tertentu. Kedua field bersifat opsional — jika tidak diisi, default ke bulan berjalan.\n\n| Field | Tipe    | Wajib | Keterangan         |\n|-------|---------|-------|--------------------|\n| bulan | integer | Tidak | 1–12               |\n| tahun | integer | Tidak | Min 2000           |"
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"success\",\n    \"message\": \"Rekap presensi bulan 2/2026 berhasil digenerate.\",\n    \"data\": {\n        \"id\": 6,\n        \"id_user_si\": 5,\n        \"id_academic_period\": 2,\n        \"bulan\": 2,\n        \"tahun\": 2026,\n        \"total_hadir\": 16,\n        \"total_izin\": 1,\n        \"total_sakit\": 0,\n        \"total_alpha\": 1,\n        \"total_hari_kerja\": 18,\n        \"created_at\": \"2026-03-07T08:14:00.000000Z\",\n        \"updated_at\": \"2026-03-07T08:14:00.000000Z\",\n        \"academic_period\": {\n            \"id_academic_period\": 2,\n            \"name\": \"Semester Genap 2025/2026\",\n            \"start_date\": \"2026-02-01\",\n            \"end_date\": \"2026-07-31\",\n            \"is_active\": true\n        }\n    }\n}"
+                        },
+                        {
+                            "name": "404 - Periode Akademik Tidak Ditemukan",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"bulan\": 2,\n    \"tahun\": 2026\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap/generate",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap",
+                                        "generate"
+                                    ]
+                                },
+                                "description": "Generate rekap untuk bulan & tahun tertentu. Kedua field bersifat opsional — jika tidak diisi, default ke bulan berjalan.\n\n| Field | Tipe    | Wajib | Keterangan         |\n|-------|---------|-------|--------------------|\n| bulan | integer | Tidak | 1–12               |\n| tahun | integer | Tidak | Min 2000           |"
+                            },
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"error\",\n    \"message\": \"Tidak ditemukan periode akademik yang mencakup 6/2024.\"\n}"
+                        },
+                        {
+                            "name": "422 - Validasi Gagal",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"bulan\": 2,\n    \"tahun\": 2026\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap/generate",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap",
+                                        "generate"
+                                    ]
+                                },
+                                "description": "Generate rekap untuk bulan & tahun tertentu. Kedua field bersifat opsional — jika tidak diisi, default ke bulan berjalan.\n\n| Field | Tipe    | Wajib | Keterangan         |\n|-------|---------|-------|--------------------|\n| bulan | integer | Tidak | 1–12               |\n| tahun | integer | Tidak | Min 2000           |"
+                            },
+                            "status": "Unprocessable Content",
+                            "code": 422,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"The bulan field must be between 1 and 12.\",\n    \"errors\": {\n        \"bulan\": [\n            \"The bulan field must be between 1 and 12.\"\n        ]\n    }\n}"
+                        },
+                        {
+                            "name": "500 - Server Error",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"bulan\": 2,\n    \"tahun\": 2026\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap/generate",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap",
+                                        "generate"
+                                    ]
+                                },
+                                "description": "Generate rekap untuk bulan & tahun tertentu. Kedua field bersifat opsional — jika tidak diisi, default ke bulan berjalan.\n\n| Field | Tipe    | Wajib | Keterangan         |\n|-------|---------|-------|--------------------|\n| bulan | integer | Tidak | 1–12               |\n| tahun | integer | Tidak | Min 2000           |"
+                            },
+                            "status": "Internal Server Error",
+                            "code": 500,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"error\",\n    \"message\": \"Terjadi kesalahan saat mengenerate rekap presensi.\"\n}"
+                        },
+                        {
+                            "name": "401 - Tidak Terautentikasi",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"bulan\": 2,\n    \"tahun\": 2026\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap/generate",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap",
+                                        "generate"
+                                    ]
+                                },
+                                "description": "Generate rekap untuk bulan & tahun tertentu. Kedua field bersifat opsional — jika tidak diisi, default ke bulan berjalan.\n\n| Field | Tipe    | Wajib | Keterangan         |\n|-------|---------|-------|--------------------|\n| bulan | integer | Tidak | 1–12               |\n| tahun | integer | Tidak | Min 2000           |"
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Unauthenticated.\"\n}"
+                        },
+                        {
+                            "name": "403 - Akses Ditolak (bukan dosen)",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "3|Jxq5sGJeoNfBG15JUKnEkVSQBV5Yc9jZdCmbfgMz31a238d5",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"bulan\": 2,\n    \"tahun\": 2026\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/recap/generate",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "recap",
+                                        "generate"
+                                    ]
+                                },
+                                "description": "Generate rekap untuk bulan & tahun tertentu. Kedua field bersifat opsional — jika tidak diisi, default ke bulan berjalan.\n\n| Field | Tipe    | Wajib | Keterangan         |\n|-------|---------|-------|--------------------|\n| bulan | integer | Tidak | 1–12               |\n| tahun | integer | Tidak | Min 2000           |"
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "Text",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"This action is unauthorized.\"\n}"
+                        }
+                    ]
+                }
+            ],
+            "description": "Endpoint untuk melihat dan mengenerate rekap presensi bulanan dosen.\n\nSemua request memerlukan header:\n  Authorization: Bearer {{token}}"
+        },
+        {
+            "name": "Integrasi Penggajian (C.1 → C.4)",
+            "item": [
+                {
+                    "name": "GET Potongan Presensi untuk Penggajian",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:8000/api/lecturer/attendance/payroll-deduction?bulan=3&tahun=2026",
+                            "protocol": "http",
+                            "host": ["127", "0", "0", "1"],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "lecturer",
+                                "attendance",
+                                "payroll-deduction"
+                            ],
+                            "query": [
+                                {
+                                    "key": "bulan",
+                                    "value": "3",
+                                    "description": "Nomor bulan (1–12). Wajib."
+                                },
+                                {
+                                    "key": "tahun",
+                                    "value": "2026",
+                                    "description": "Tahun empat digit, min 2000. Wajib."
+                                }
+                            ]
+                        },
+                        "description": "Menghitung nilai potongan gaji berbasis jumlah hari alpha untuk dosen yang sedang login pada bulan & tahun tertentu.\n\nRumus: `total_potongan = total_alpha × Rp 100.000`\n\nEndpoint ini hanya membaca data dari rekap_presensi_dosen — tidak menulis ke tabel gaji.\n\n| Param | Tipe    | Wajib | Keterangan |\n|-------|---------|-------|------------|\n| bulan | integer | Ya    | 1–12       |\n| tahun | integer | Ya    | Min 2000   |"
+                    },
+                    "response": [
+                        {
+                            "name": "200 - Potongan Berhasil Dihitung",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/payroll-deduction?bulan=3&tahun=2026",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "payroll-deduction"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "bulan",
+                                            "value": "3"
+                                        },
+                                        {
+                                            "key": "tahun",
+                                            "value": "2026"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"success\",\n    \"message\": \"Data potongan presensi bulan 3/2026 berhasil dihitung.\",\n    \"data\": {\n        \"id_user_si\": 5,\n        \"bulan\": 3,\n        \"tahun\": 2026,\n        \"total_alpha\": 2,\n        \"denda_per_hari\": 100000,\n        \"total_potongan\": 200000\n    }\n}"
+                        },
+                        {
+                            "name": "200 - Tidak Ada Alpha (potongan nol)",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/payroll-deduction?bulan=3&tahun=2026",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "payroll-deduction"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "bulan",
+                                            "value": "3"
+                                        },
+                                        {
+                                            "key": "tahun",
+                                            "value": "2026"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"success\",\n    \"message\": \"Data potongan presensi bulan 3/2026 berhasil dihitung.\",\n    \"data\": {\n        \"id_user_si\": 5,\n        \"bulan\": 3,\n        \"tahun\": 2026,\n        \"total_alpha\": 0,\n        \"denda_per_hari\": 100000,\n        \"total_potongan\": 0\n    }\n}"
+                        },
+                        {
+                            "name": "404 - Rekap Belum Di-generate",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/payroll-deduction?bulan=1&tahun=2026",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "payroll-deduction"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "bulan",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "tahun",
+                                            "value": "2026"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"error\",\n    \"message\": \"Rekap presensi bulan 1/2026 untuk dosen ID 5 belum tersedia. Silakan generate rekap terlebih dahulu melalui endpoint /lecturer/attendance/recap/generate.\"\n}"
+                        },
+                        {
+                            "name": "422 - Validasi Gagal (bulan/tahun tidak dikirim)",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/payroll-deduction",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "payroll-deduction"
+                                    ]
+                                }
+                            },
+                            "status": "Unprocessable Content",
+                            "code": 422,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Parameter bulan wajib diisi. (and 1 more error)\",\n    \"errors\": {\n        \"bulan\": [\"Parameter bulan wajib diisi.\"],\n        \"tahun\": [\"Parameter tahun wajib diisi.\"]\n    }\n}"
+                        },
+                        {
+                            "name": "422 - Validasi Gagal (bulan tidak valid)",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/payroll-deduction?bulan=13&tahun=2026",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "payroll-deduction"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "bulan",
+                                            "value": "13"
+                                        },
+                                        {
+                                            "key": "tahun",
+                                            "value": "2026"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "Unprocessable Content",
+                            "code": 422,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Bulan harus antara 1 sampai 12.\",\n    \"errors\": {\n        \"bulan\": [\"Bulan harus antara 1 sampai 12.\"]\n    }\n}"
+                        },
+                        {
+                            "name": "401 - Tidak Terautentikasi",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/payroll-deduction?bulan=3&tahun=2026",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "payroll-deduction"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "bulan",
+                                            "value": "3"
+                                        },
+                                        {
+                                            "key": "tahun",
+                                            "value": "2026"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"Unauthenticated.\"\n}"
+                        },
+                        {
+                            "name": "403 - Akses Ditolak (bukan dosen)",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/payroll-deduction?bulan=3&tahun=2026",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "payroll-deduction"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "bulan",
+                                            "value": "3"
+                                        },
+                                        {
+                                            "key": "tahun",
+                                            "value": "2026"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"message\": \"This action is unauthorized.\"\n}"
+                        },
+                        {
+                            "name": "500 - Server Error",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "http://127.0.0.1:8000/api/lecturer/attendance/payroll-deduction?bulan=3&tahun=2026",
+                                    "protocol": "http",
+                                    "host": ["127", "0", "0", "1"],
+                                    "port": "8000",
+                                    "path": [
+                                        "api",
+                                        "lecturer",
+                                        "attendance",
+                                        "payroll-deduction"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "bulan",
+                                            "value": "3"
+                                        },
+                                        {
+                                            "key": "tahun",
+                                            "value": "2026"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "Internal Server Error",
+                            "code": 500,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": \"error\",\n    \"message\": \"Terjadi kesalahan saat menghitung potongan presensi.\"\n}"
+                        }
+                    ]
+                }
+            ],
+            "description": "Endpoint jembatan antara Modul Presensi (C.1) dan Modul Gaji (C.4).\n\nPreasyarat: rekap presensi untuk bulan/tahun yang diminta harus sudah di-generate terlebih dahulu via POST /lecturer/attendance/recap/generate\n\nSemua request memerlukan header:\n  Authorization: Bearer {{token}}"
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost/api",
+            "type": "string",
+            "description": "Base URL aplikasi. Sesuaikan dengan environment (local/staging/production)."
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string",
+            "description": "Bearer token Sanctum. Isi setelah melakukan login."
+        }
+    ]
+}

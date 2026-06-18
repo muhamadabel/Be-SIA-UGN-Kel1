@@ -1,0 +1,24 @@
+{
+    "status": "success",
+    "message": "Daftar mata kuliah berhasil diambil.",
+    "data": [
+        {
+            "id_subject": 1,
+            "name_subject": "Pemrograman Web Lanjut",
+            "code_subject": "PWL",
+            "sks": 3
+        },
+        {
+            "id_subject": 2,
+            "name_subject": "Basis Data",
+            "code_subject": "BASDAT",
+            "sks": 3
+        },
+        {
+            "id_subject": 3,
+            "name_subject": "Jaringan Komputer",
+            "code_subject": "JARKOM",
+            "sks": 2
+        }
+    ]
+}

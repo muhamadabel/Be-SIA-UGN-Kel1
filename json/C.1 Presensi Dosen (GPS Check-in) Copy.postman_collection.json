@@ -1,0 +1,692 @@
+{
+	"info": {
+		"_postman_id": "f32adf38-9056-4cfb-9884-c7a74a6b8964",
+		"name": "C.1 Presensi Dosen (GPS Check-in) Copy",
+		"description": "Koleksi API untuk fitur Presensi Dosen berbasis verifikasi lokasi GPS (branch: feat/gps-verification).\n\nPastikan variabel `base_url` dan `token` sudah diisi sebelum menjalankan request.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "50398167",
+		"_collection_link": "https://alfizdestaap-3300818.postman.co/workspace/Alfiz-Desta's-Workspace~b4f6558e-dc23-4679-898d-80aacfce5728/collection/50398167-f32adf38-9056-4cfb-9884-c7a74a6b8964?action=share&source=collection_link&creator=50398167"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login sebagai Dosen",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.status === 'success') {",
+									"    pm.collectionVariables.set('token', res.data.access_token);",
+									"    console.log('Token tersimpan:', res.data.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"dosen@example.com\",\n    \"password\": \"password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login sebagai dosen untuk mendapatkan Bearer token.\nScript di tab Tests akan otomatis menyimpan token ke variabel koleksi."
+					},
+					"response": [
+						{
+							"name": "200 Login Berhasil",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"dosen@example.com\",\n    \"password\": \"password\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/login",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								},
+								"description": "Login sebagai dosen untuk mendapatkan Bearer token.\nScript di tab Tests akan otomatis menyimpan token ke variabel koleksi."
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"message\": \"Login successful\",\n    \"data\": {\n        \"access_token\": \"1|abc123...\",\n        \"token_type\": \"Bearer\",\n        \"user\": {\n            \"id\": 5,\n            \"name\": \"Dr. Ahmad Fauzi\",\n            \"email\": \"dosen@example.com\",\n            \"username\": \"dosen.ahmad\",\n            \"is_active\": true,\n            \"id_program\": 1,\n            \"roles\": [\"dosen\"],\n            \"permissions\": []\n        }\n    }\n}"
+						},
+						{
+							"name": "401 Kredensial Salah",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"dosen@example.com\",\n    \"password\": \"password\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/login",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								},
+								"description": "Login sebagai dosen untuk mendapatkan Bearer token.\nScript di tab Tests akan otomatis menyimpan token ke variabel koleksi."
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"failed\",\n    \"message\": \"Email atau password salah.\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Presensi Dosen (GPS)",
+			"item": [
+				{
+					"name": "Check-in (Dalam Radius)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": -7.771270,\n    \"longitude\": 110.377541,\n    \"id_schedule\": 1,\n    \"keterangan\": \"Hadir tepat waktu\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/lecturer/attendance/check-in",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"lecturer",
+								"attendance",
+								"check-in"
+							]
+						},
+						"description": "Check-in presensi dosen berbasis GPS.\n\n**Rules:**\n- `latitude` & `longitude` wajib diisi.\n- `id_schedule` opsional (nullable) — isi jika presensi terkait jadwal tertentu.\n- `keterangan` opsional.\n- `id_user_si` otomatis diambil dari token, tidak perlu dikirim.\n- Server akan mengecek semua `campus_settings` yang `is_active = true`.\n- Presensi hanya disimpan jika koordinat masuk radius salah satu kampus."
+					},
+					"response": [
+						{
+							"name": "201 Check-in Berhasil",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"latitude\": -7.771270,\n    \"longitude\": 110.377541,\n    \"id_schedule\": 1,\n    \"keterangan\": \"Hadir tepat waktu\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/lecturer/attendance/check-in",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"lecturer",
+										"attendance",
+										"check-in"
+									]
+								},
+								"description": "Check-in presensi dosen berbasis GPS.\n\n**Rules:**\n- `latitude` & `longitude` wajib diisi.\n- `id_schedule` opsional (nullable) — isi jika presensi terkait jadwal tertentu.\n- `keterangan` opsional.\n- `id_user_si` otomatis diambil dari token, tidak perlu dikirim.\n- Server akan mengecek semua `campus_settings` yang `is_active = true`.\n- Presensi hanya disimpan jika koordinat masuk radius salah satu kampus."
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"success\",\n    \"message\": \"Presensi berhasil dicatat.\",\n    \"data\": {\n        \"id\": 42,\n        \"tanggal\": \"2026-03-06\",\n        \"jam_masuk\": \"08:15:00\",\n        \"status\": \"hadir\",\n        \"is_dalam_radius\": true,\n        \"distance_meter\": 87.34,\n        \"nama_kampus\": \"Kampus Utama UGN Padangsidimpuan\",\n        \"academic_period\": \"Semester Genap 2025/2026\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Check-in (Di Luar Radius)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": -6.200000,\n    \"longitude\": 106.816666,\n    \"id_schedule\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/lecturer/attendance/check-in",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"lecturer",
+								"attendance",
+								"check-in"
+							]
+						},
+						"description": "Simulasi check-in dari koordinat yang berada di luar radius semua kampus.\nResponse 422 akan dikembalikan."
+					},
+					"response": [
+						{
+							"name": "422 Di Luar Radius Kampus",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"latitude\": -6.200000,\n    \"longitude\": 106.816666,\n    \"id_schedule\": null\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/lecturer/attendance/check-in",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"lecturer",
+										"attendance",
+										"check-in"
+									]
+								},
+								"description": "Simulasi check-in dari koordinat yang berada di luar radius semua kampus.\nResponse 422 akan dikembalikan."
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"failed\",\n    \"message\": \"Presensi gagal. Anda berada di luar radius semua kampus yang terdaftar.\",\n    \"data\": {\n        \"is_dalam_radius\": false\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Check-in (Validasi Input Gagal)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": \"bukan-angka\",\n    \"longitude\": 200\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/lecturer/attendance/check-in",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"lecturer",
+								"attendance",
+								"check-in"
+							]
+						},
+						"description": "Simulasi pengiriman input yang tidak valid:\n- `latitude` bukan angka\n- `longitude` di luar range (-180 s/d 180)"
+					},
+					"response": [
+						{
+							"name": "422 Validasi Gagal",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"latitude\": \"bukan-angka\",\n    \"longitude\": 200\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/lecturer/attendance/check-in",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"lecturer",
+										"attendance",
+										"check-in"
+									]
+								},
+								"description": "Simulasi pengiriman input yang tidak valid:\n- `latitude` bukan angka\n- `longitude` di luar range (-180 s/d 180)"
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Koordinat lintang harus berupa angka.\",\n    \"errors\": {\n        \"latitude\": [\n            \"Koordinat lintang harus berupa angka.\"\n        ],\n        \"longitude\": [\n            \"Koordinat bujur tidak valid (harus antara -180 dan 180).\"\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Check-in (Tanpa Token / Unauthenticated)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": -7.771270,\n    \"longitude\": 110.377541\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/lecturer/attendance/check-in",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"lecturer",
+								"attendance",
+								"check-in"
+							]
+						},
+						"description": "Simulasi request tanpa Bearer token. Harus mengembalikan 401."
+					},
+					"response": [
+						{
+							"name": "401 Unauthenticated",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"latitude\": -7.771270,\n    \"longitude\": 110.377541\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/lecturer/attendance/check-in",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"lecturer",
+										"attendance",
+										"check-in"
+									]
+								},
+								"description": "Simulasi request tanpa Bearer token. Harus mengembalikan 401."
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Check-in (Role Bukan Dosen / Forbidden)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": -7.771270,\n    \"longitude\": 110.377541\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/lecturer/attendance/check-in",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"lecturer",
+								"attendance",
+								"check-in"
+							]
+						},
+						"description": "Simulasi request menggunakan token dari user mahasiswa / manager. Harus mengembalikan 403 karena route ini hanya untuk role `dosen`.\n\nGanti variabel `token` dengan token non-dosen sebelum menjalankan."
+					},
+					"response": [
+						{
+							"name": "403 Forbidden (Bukan Dosen)",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"latitude\": -7.771270,\n    \"longitude\": 110.377541\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/lecturer/attendance/check-in",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"lecturer",
+										"attendance",
+										"check-in"
+									]
+								},
+								"description": "Simulasi request menggunakan token dari user mahasiswa / manager. Harus mengembalikan 403 karena route ini hanya untuk role `dosen`.\n\nGanti variabel `token` dengan token non-dosen sebelum menjalankan."
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "Text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"This action is unauthorized.\"\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost/api",
+			"type": "string",
+			"description": {
+				"content": "Base URL API. Ganti sesuai environment (localhost / Railway).",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string",
+			"description": {
+				"content": "Bearer token dari response /api/auth/login. Isi setelah login.",
+				"type": "text/plain"
+			}
+		}
+	]
+}
