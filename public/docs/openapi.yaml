@@ -1,0 +1,319 @@
+openapi: 3.0.3
+info:
+  title: SIA UGN — Kelompok 1 API
+  version: "1.0.0"
+  description: >
+    Dokumentasi API modul **Kelompok 1** SIA UGN: BKD/Angka Kredit, Kegiatan Mengajar,
+    Penelitian (Proposal), Publikasi Ilmiah, Presensi GPS Dosen, dan Gaji/Payroll.
+
+    **Autentikasi:** login via `POST /auth/login` → ambil `data.access_token` →
+    klik tombol **Authorize** (kanan atas), isi token. Semua endpoint terproteksi
+    memakai header `Authorization: Bearer <token>`.
+servers:
+  - url: /api
+    description: Base URL API (relatif terhadap host)
+
+tags:
+  - name: Auth
+  - name: Kegiatan Mengajar
+  - name: Penelitian (Proposal)
+  - name: Publikasi Ilmiah
+  - name: Angka Kredit / BKD
+  - name: Presensi Dosen
+  - name: Gaji / Payroll
+  - name: Manager — Aktivitas Dosen
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    SuccessEnvelope:
+      type: object
+      properties:
+        status: { type: string, example: success }
+        message: { type: string }
+        data: {}
+    ErrorEnvelope:
+      type: object
+      properties:
+        status: { type: string, example: error }
+        message: { type: string }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, example: dosen@gmail.com }
+        password: { type: string, example: dosen123 }
+    ValidasiRequest:
+      type: object
+      properties:
+        status_validasi: { type: string, enum: [Disetujui, Ditolak, Revisi, Aktif], example: Disetujui }
+        catatan_validasi: { type: string, example: "Berkas lengkap." }
+        angka_kredit: { type: number, example: 70, description: "Hanya saat menyetujui Penelitian/PKM menjadi Aktif." }
+    CheckInRequest:
+      type: object
+      required: [latitude, longitude, id_schedule]
+      properties:
+        latitude: { type: number, example: -7.77127 }
+        longitude: { type: number, example: 110.37754 }
+        id_schedule: { type: integer, example: 1 }
+
+paths:
+  # ───────────────────────── AUTH ─────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (dapatkan access token)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Berhasil — token ada di `data.access_token`
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: success
+                  data:
+                    access_token: "1|xxxxxxxx"
+                    user: { id: 18, name: "Dosen User SI", roles: ["dosen"] }
+        '422': { description: Kredensial salah / validasi gagal }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (revoke token)
+      responses: { '200': { description: OK } }
+  /profile:
+    get:
+      tags: [Auth]
+      summary: Profil user yang login
+      responses: { '200': { description: OK } }
+  /profile/staff:
+    get:
+      tags: [Auth]
+      summary: Profil staf/dosen
+      responses: { '200': { description: OK } }
+
+  # ──────────────────── KEGIATAN MENGAJAR ────────────────────
+  /lecturer/kegiatan-pengajar:
+    get:
+      tags: [Kegiatan Mengajar]
+      summary: "[Dosen] Daftar kegiatan mengajar (auto dari kelas yang diajar)"
+      responses: { '200': { description: OK }, '403': { description: Bukan dosen } }
+  /lecturer/kegiatan-pengajar/class/{id_class}/ajukan:
+    post:
+      tags: [Kegiatan Mengajar]
+      summary: "[Dosen] Ajukan klaim AK untuk satu kelas (upload berkas)"
+      parameters:
+        - { name: id_class, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                jenis_kelas: { type: string, example: Teori }
+                file_sk: { type: string, format: binary }
+                file_nilai: { type: string, format: binary }
+                file_presensi: { type: string, format: binary }
+      responses: { '200': { description: Diajukan } }
+  /manager/kegiatan-pengajar:
+    get:
+      tags: [Kegiatan Mengajar]
+      summary: "[Manager] Daftar kegiatan menunggu validasi (status Diajukan)"
+      responses: { '200': { description: OK } }
+  /manager/kegiatan-pengajar/{id}/validasi:
+    put:
+      tags: [Kegiatan Mengajar]
+      summary: "[Manager] Validasi kegiatan (Disetujui/Ditolak/Revisi)"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ValidasiRequest' } } }
+      responses: { '200': { description: OK } }
+
+  # ──────────────────── PENELITIAN (PROPOSAL) ────────────────────
+  /lecturer/penelitian-proposal:
+    get:
+      tags: [Penelitian (Proposal)]
+      summary: "[Dosen] Daftar proposal penelitian + total AK"
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Penelitian (Proposal)]
+      summary: "[Dosen] Ajukan proposal penelitian baru"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                judul: { type: string }
+                abstrak: { type: string }
+                bidang_penelitian: { type: string }
+                sumber_dana: { type: string }
+                tahun: { type: integer }
+                file_proposal: { type: string, format: binary }
+      responses: { '201': { description: Dibuat } }
+  /lecturer/penelitian-proposal/{id}/ajukan:
+    post:
+      tags: [Penelitian (Proposal)]
+      summary: "[Dosen] Ajukan ulang proposal (Revisi → Pengajuan)"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /lecturer/penelitian-proposal/{id}/selesai:
+    post:
+      tags: [Penelitian (Proposal)]
+      summary: "[Dosen] Tandai selesai (upload laporan + luaran)"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /manager/penelitian-proposal:
+    get:
+      tags: [Penelitian (Proposal)]
+      summary: "[Manager] Daftar proposal menunggu validasi (status Pengajuan)"
+      responses: { '200': { description: OK } }
+  /manager/penelitian-proposal/{id}/validasi:
+    put:
+      tags: [Penelitian (Proposal)]
+      summary: "[Manager] Validasi proposal (Aktif + isi AK / Ditolak / Revisi)"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ValidasiRequest' } } }
+      responses: { '200': { description: OK } }
+
+  # ──────────────────── PUBLIKASI ILMIAH ────────────────────
+  /lecturer/penelitian:
+    get:
+      tags: [Publikasi Ilmiah]
+      summary: "[Dosen] Daftar publikasi ilmiah"
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Publikasi Ilmiah]
+      summary: "[Dosen] Tambah publikasi"
+      responses: { '201': { description: Dibuat } }
+  /lecturer/penelitian/{id}/ajukan:
+    post:
+      tags: [Publikasi Ilmiah]
+      summary: "[Dosen] Ajukan publikasi (Draft/Revisi → Diajukan)"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /manager/penelitian:
+    get:
+      tags: [Publikasi Ilmiah]
+      summary: "[Manager] Daftar publikasi menunggu validasi (Diajukan)"
+      responses: { '200': { description: OK } }
+  /manager/penelitian/{id}/validasi:
+    put:
+      tags: [Publikasi Ilmiah]
+      summary: "[Manager] Validasi publikasi (Disetujui/Ditolak/Revisi)"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/ValidasiRequest' } } }
+      responses: { '200': { description: OK } }
+
+  # ──────────────────── ANGKA KREDIT / BKD ────────────────────
+  /lecturer/bkd:
+    get:
+      tags: [Angka Kredit / BKD]
+      summary: "[Dosen] Riwayat BKD"
+      responses: { '200': { description: OK } }
+  /lecturer/bkd/master-jabatan:
+    get: { tags: [Angka Kredit / BKD], summary: "[Dosen] Target kum per jabatan", responses: { '200': { description: OK } } }
+  /lecturer/bkd/master-kegiatan:
+    get: { tags: [Angka Kredit / BKD], summary: "[Dosen] Katalog jenis kegiatan + AK per satuan", responses: { '200': { description: OK } } }
+  /lecturer/bkd/check-eligibility:
+    get: { tags: [Angka Kredit / BKD], summary: "[Dosen] Cek eligibility kenaikan jabatan + rincian AK", responses: { '200': { description: OK } } }
+  /lecturer/bkd/kegiatan:
+    post: { tags: [Angka Kredit / BKD], summary: "[Dosen] Input kegiatan BKD", responses: { '200': { description: OK } } }
+  /lecturer/bkd/finalisasi:
+    post: { tags: [Angka Kredit / BKD], summary: "[Dosen] Finalisasi BKD (draft → diajukan)", responses: { '200': { description: OK } } }
+  /lecturer/bkd/submit-pengajuan:
+    post: { tags: [Angka Kredit / BKD], summary: "[Dosen] Ajukan kenaikan jabatan (PAK)", responses: { '200': { description: OK } } }
+  /manager/bkd/submissions:
+    get: { tags: [Angka Kredit / BKD], summary: "[Manager] Daftar pengajuan BKD untuk divalidasi", responses: { '200': { description: OK } } }
+  /manager/bkd/submissions/{id}/validasi:
+    put:
+      tags: [Angka Kredit / BKD]
+      summary: "[Manager] Validasi BKD (disetujui/ditolak)"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+
+  # ──────────────────── PRESENSI DOSEN ────────────────────
+  /lecturer/schedules:
+    get: { tags: [Presensi Dosen], summary: "[Dosen] Jadwal mengajar", responses: { '200': { description: OK } } }
+  /lecturer/attendance/classes:
+    get: { tags: [Presensi Dosen], summary: "[Dosen] Daftar kelas untuk presensi", responses: { '200': { description: OK } } }
+  /lecturer/attendance/classes/{classId}/meetings:
+    get:
+      tags: [Presensi Dosen]
+      summary: "[Dosen] Daftar pertemuan kelas (untuk check-in)"
+      parameters: [{ name: classId, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /lecturer/attendance/check-in:
+    post:
+      tags: [Presensi Dosen]
+      summary: "[Dosen] Check-in presensi GPS"
+      description: >
+        Validasi: jadwal milik dosen, periode aktif, **tanggal dalam window 7 hari**
+        (boleh dari tanggal pertemuan s/d 7 hari setelahnya), jam dalam jam kelas,
+        dan GPS dalam radius salah satu kampus aktif.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CheckInRequest' } } }
+      responses:
+        '201': { description: Presensi berhasil dicatat }
+        '409': { description: Sudah pernah presensi pertemuan ini }
+        '422': { description: Di luar window 7 hari / di luar jam / di luar radius }
+  /lecturer/attendance/check-in/history:
+    get:
+      tags: [Presensi Dosen]
+      summary: "[Dosen] Pertemuan mana yang sudah dihadiri"
+      parameters: [{ name: id_schedules, in: query, schema: { type: string }, description: "CSV id_schedule" }]
+      responses: { '200': { description: OK } }
+  /lecturer/attendance/recap:
+    get: { tags: [Presensi Dosen], summary: "[Dosen] Rekap presensi", responses: { '200': { description: OK } } }
+
+  # ──────────────────── GAJI / PAYROLL ────────────────────
+  /lecturer/payroll:
+    get: { tags: [Gaji / Payroll], summary: "[Dosen] Daftar slip gaji", responses: { '200': { description: OK } } }
+  /lecturer/payroll/overview:
+    get: { tags: [Gaji / Payroll], summary: "[Dosen] Dashboard payroll (gaji + kehadiran bulan berjalan)", responses: { '200': { description: OK } } }
+  /lecturer/payroll/{id}/pdf:
+    get:
+      tags: [Gaji / Payroll]
+      summary: "[Dosen] Unduh slip gaji (PDF)"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: PDF } }
+  /manager/payroll/lecturers:
+    get: { tags: [Gaji / Payroll], summary: "[Manager] Daftar dosen untuk modul gaji", responses: { '200': { description: OK } } }
+  /manager/payroll/lecturers/{lecturerId}/slips:
+    get:
+      tags: [Gaji / Payroll]
+      summary: "[Manager] Daftar slip gaji seorang dosen"
+      parameters: [{ name: lecturerId, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+
+  # ──────────────────── MANAGER — AKTIVITAS DOSEN ────────────────────
+  /manager/lecturers:
+    get: { tags: [Manager — Aktivitas Dosen], summary: "[Manager] Daftar dosen", responses: { '200': { description: OK } } }
+  /manager/lecturers/{id}/profile:
+    get:
+      tags: [Manager — Aktivitas Dosen]
+      summary: "[Manager] Profil seorang dosen"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /manager/lecturers/{id}/aktivitas:
+    get:
+      tags: [Manager — Aktivitas Dosen]
+      summary: "[Manager] Agregasi aktivitas dosen (AK, publikasi, penelitian, kegiatan, presensi)"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }

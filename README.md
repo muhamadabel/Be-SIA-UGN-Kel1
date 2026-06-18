@@ -58,6 +58,21 @@ php artisan serve            # http://127.0.0.1:8000  (API: /api)
 
 ---
 
+## Dokumentasi API (Swagger UI)
+
+Setelah server jalan, buka **Swagger UI** di:
+
+```
+http://127.0.0.1:8000/docs/          (lokal)
+https://<domain-kamu>/docs/          (setelah deploy)
+```
+
+Interaktif (try-it-out): login via `POST /auth/login` → klik **Authorize** (kanan atas)
+→ tempel `access_token` → coba semua endpoint langsung dari browser.
+Spec OpenAPI 3.0 ada di `public/docs/openapi.yaml`.
+
+---
+
 ## Akun test (hasil seed)
 
 | Role | Email | Password |
